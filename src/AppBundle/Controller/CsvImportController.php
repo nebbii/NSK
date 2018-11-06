@@ -8,8 +8,9 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class CsvImportController extends Controller
 {
@@ -32,9 +33,17 @@ class CsvImportController extends Controller
             echo "Submitted";
             // get contents from csv file
             $csv = $form['file']->getData();
-
             $csvData = file_get_contents($csv->getPathName());
-            //echo "<pre>"; print_r($csv); echo "</pre>";
+
+            // serialize csv
+            $serializer = new Serializer([new ObjectNormalizer()], [new CsvEncoder()]);
+
+            $data = $serializer->decode($csvData, 'csv');
+
+
+            echo "<pre>";
+            print_r($data);
+            echo "</pre>";
             
             // store into object
 
