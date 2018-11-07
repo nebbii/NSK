@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -15,10 +16,9 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 class CsvImportController extends Controller
 {
     /**
-     * @Route("/importCsv", name="importCsv")
-     * 
+     * @Route("/csv/index", name="csv_index")
      */
-    public function importCsvAction(Request $request)
+    public function indexCsvAction(Request $request)
     {
         $form = $this->createFormBuilder()
                 ->add('file', FileType::class, [
@@ -29,33 +29,50 @@ class CsvImportController extends Controller
 
         $form->handleRequest($request);
 
-        if($form->isSubmitted() && $form->isValid()) {
-            echo "Submitted";
-            // get contents from csv file
+        if($form->isSubmitted() && $form->isValid()) 
+        {
+            // process contents from csv
             $csv = $form['file']->getData();
             $csvData = file_get_contents($csv->getPathName());
 
-            // serialize csv
             $serializer = new Serializer([new ObjectNormalizer()], [new CsvEncoder()]);
-
             $data = $serializer->decode($csvData, 'csv');
 
+            echo "<pre>";print_r($data[0]);echo "</pre>";
 
-            echo "<pre>";
-            print_r($data);
-            echo "</pre>";
-            
+            // store products in session for edit
+
+            // if products are found, show form for assigning attributes
+            return $this->redirectToRoute('csv_edit');            
+
+        } else {
+            return $this->render('AppBundle:CsvImport:index.html.twig', array(
+                'form' => $form->createView(),
+            ));
+        }
+    }
+
+    /**
+     * @Route("/csv/edit", name="csv_edit")
+     */
+    public function editCsvAction(Request $request)
+    {
+        // setup form for columns to attributes
+
+        // save settings, send to process function
+        /*
+        if(count($data) > 0)
+        {
+            echo "Products found";
             // store into object
+            foreach($data as $product) {
 
-            // show form for which columns insert into where
+            }
 
             // make new purchase order & store new items 
 
         }
-
-        return $this->render('AppBundle:CsvImport:import_csv.html.twig', array(
-            'form' => $form->createView(),
-        ));
+        */
+        return $this->render('AppBundle:CsvImport:edit.html.twig', array()); 
     }
-
 }
