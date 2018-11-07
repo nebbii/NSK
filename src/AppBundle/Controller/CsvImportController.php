@@ -3,17 +3,20 @@
 namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Request;
 
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
 
 class CsvImportController extends Controller
 {
@@ -23,7 +26,6 @@ class CsvImportController extends Controller
     public function indexCsvAction(Request $request)
     {
         $session = new Session();
-        $session->start();
 
         $form = $this->createFormBuilder()
                 ->add('file', FileType::class, [
@@ -43,9 +45,10 @@ class CsvImportController extends Controller
             $serializer = new Serializer([new ObjectNormalizer()], [new CsvEncoder()]);
             $data = $serializer->decode($csvData, 'csv');
 
-            echo "<pre>";print_r($data[0]);echo "</pre>";
-
             // store products in session for edit
+            $keys = array_keys($data[0]);
+            $session->set('products', $data);
+            $session->set('keys', $keys);
 
             // if products are found, show form for assigning attributes
             return $this->redirectToRoute('csv_edit');            
@@ -62,7 +65,28 @@ class CsvImportController extends Controller
      */
     public function editCsvAction(Request $request)
     {
+        $session = new Session();
+        
+        // put normal attrs and attribute options in array
+
         // setup form for columns to attributes
+        $keys = $session->get('keys');
+        $form = $this->createFormBuilder();
+
+        foreach($keys as $key) {
+            $form->add($key, ChoiceType::class, array(
+                'choices' => array(
+                    'bing' => 1,
+                    'bing' => 2,
+                    'bing' => 3,
+                    'bing' => 4,
+                    'bing' => 5,
+                )
+            ));
+        }
+        $form = $form->getForm();
+
+        $form->handleRequest($request);
 
         // save settings, send to process function
         /*
@@ -78,6 +102,8 @@ class CsvImportController extends Controller
 
         }
         */
-        return $this->render('AppBundle:CsvImport:edit.html.twig', array()); 
+        return $this->render('AppBundle:CsvImport:edit.html.twig', array(
+            'form' => $form->createView(),
+        )); 
     }
 }
