@@ -4,14 +4,16 @@ namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class CsvImportController extends Controller
 {
@@ -20,6 +22,9 @@ class CsvImportController extends Controller
      */
     public function indexCsvAction(Request $request)
     {
+        $session = new Session();
+        $session->start();
+
         $form = $this->createFormBuilder()
                 ->add('file', FileType::class, [
                     'mapped' => false,
