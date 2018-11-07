@@ -17,6 +17,9 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
+use AppBundle\Entity\Product;
+use AppBundle\Entity\Attribute;
+
 
 class CsvImportController extends Controller
 {
@@ -73,20 +76,53 @@ class CsvImportController extends Controller
         $keys = $session->get('keys');
         $form = $this->createFormBuilder();
 
+        // put attributes into arrays
+        $attributes = array();
+        $aRepo = $this->getDoctrine()
+            ->getRepository(Attribute::class)
+            ->findAll();
+
+        foreach($aRepo as $a) {
+            $attributes[$a->getName()] = $a->getId();
+        }
+
         foreach($keys as $key) {
             $form->add($key, ChoiceType::class, array(
                 'choices' => array(
-                    'bing' => 1,
-                    'bing' => 2,
-                    'bing' => 3,
-                    'bing' => 4,
-                    'bing' => 5,
+                    'n/a' => null,
+                    'Main Attributes' => array(
+                        'SKU' => 'sku',
+                        'Name' => 'name',
+                        'Type' => 'type',
+                        'Description' => 'description',
+                        'Price' => 'price'
+                    ),
+                    'Product Specific' => $attributes,
                 )
             ));
         }
+        $form->add('Save as New Order', SubmitType::class, array());
         $form = $form->getForm();
 
         $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()) 
+        {
+            // clean array
+            $result = $form->getData();
+            $data = [];
+            foreach($result as $k => $v) 
+            {
+                if(empty($v)) {
+                    unset($result[$k]);
+                } else {
+                    $columns[$k] = ['key' => $k, 'value' => $v];
+                }
+            }
+            echo "<pre>";print_r($columns); echo "</pre>";
+            
+            $session->set('result', $columns);
+        }
 
         // save settings, send to process function
         /*
@@ -105,5 +141,17 @@ class CsvImportController extends Controller
         return $this->render('AppBundle:CsvImport:edit.html.twig', array(
             'form' => $form->createView(),
         )); 
+    }
+  
+    /**
+     * @Route("/csv/process", name="csv_process")
+     */
+    public function processCsvAction(Request $request)
+    {
+        $session = new Session();
+
+        if(!is_array($session->get('result'))) {
+
+        }
     }
 }
