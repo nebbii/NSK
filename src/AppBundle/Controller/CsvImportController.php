@@ -70,8 +70,6 @@ class CsvImportController extends Controller
     {
         $session = new Session();
         
-        // put normal attrs and attribute options in array
-
         // setup form for columns to attributes
         $keys = $session->get('keys');
         $form = $this->createFormBuilder();
@@ -111,14 +109,9 @@ class CsvImportController extends Controller
             // clean array
             $result = $form->getData();
             $data = [];
-            foreach($result as $k => $v) 
-            {
-                if(empty($v)) {
-                    unset($result[$k]);
-                } else {
-                    $columns[$k] = ['key' => $k, 'value' => $v];
-                }
-            }
+
+            $columns = $this->clearBlankArrEntries($result);
+            
             echo "<pre>";print_r($columns); echo "</pre>";
             
             $session->set('result', $columns);
@@ -142,6 +135,13 @@ class CsvImportController extends Controller
             'form' => $form->createView(),
         )); 
     }
+    
+    /** 
+     * @Route("/csv/edit/dropdowns", name="csv_edit_dropdowns")
+     */
+    public function editDropdownAction(Request $request) {
+
+    }
   
     /**
      * @Route("/csv/process", name="csv_process")
@@ -153,5 +153,31 @@ class CsvImportController extends Controller
         if(!is_array($session->get('result'))) {
 
         }
+    }
+
+    /** 
+     * find blank array entries and remove them
+     */
+    public function clearBlankArrEntries($array) 
+    {
+        foreach($array as $k => $v) 
+        {
+            if(empty($v)) {
+                unset($array[$k]);
+            } else {
+                $array[$k] = ['key' => $k, 'value' => $v];
+            }
+        }
+        
+        return $array;
+    }
+
+    /**
+     * Convert serialized CSV array to new objects
+     */
+    public function placeIntoObjects($objects, $columns)
+    {
+        $em = $this->getDoctrine()->getManager();
+
     }
 }
