@@ -8,6 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
@@ -41,6 +42,11 @@ class CsvImportController extends Controller
 
         if($form->isSubmitted() && $form->isValid()) 
         {
+            // clear any old sessions
+            $session->remove('products'); 
+            $session->remove('keys'); 
+            $session->remove('cols'); 
+
             // process contents from csv
             $csv = $form['file']->getData();
             $csvData = file_get_contents($csv->getPathName());
@@ -106,15 +112,17 @@ class CsvImportController extends Controller
 
         if($form->isSubmitted() && $form->isValid()) 
         {
-            // clean array
             $result = $form->getData();
             $data = [];
 
+            // clean array
             $columns = $this->removeBlankArrEntries($result);
             
             echo "<pre>";print_r($columns); echo "</pre>";
             
-            $session->set('result', $columns);
+            $session->set('cols', $columns);
+
+            return $this->redirectToRoute('csv_edit_dropdowns');
         }
 
         // save settings, send to process function
@@ -139,8 +147,21 @@ class CsvImportController extends Controller
     /** 
      * @Route("/csv/edit/dropdowns", name="csv_edit_dropdowns")
      */
-    public function editDropdownAction(Request $request) {
-        //...
+    public function editDropdownAction(Request $request) 
+    {
+        $session = new Session();
+        echo "<pre>"; print_r($session->get('products')[0]); echo "</pre>";
+        echo "<pre>"; print_r($session->get('keys')); echo "</pre>";
+        echo "<pre>"; print_r($session->get('cols')); echo "</pre>";
+
+        $form = $this->createFormBuilder();
+
+
+        $form = $form->getForm();
+
+        return $this->render('AppBundle:CsvImport:edit.html.twig', array(
+            'form' => $form->createView(),
+        ));
     }
   
     /**
