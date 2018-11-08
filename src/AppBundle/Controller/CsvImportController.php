@@ -110,7 +110,7 @@ class CsvImportController extends Controller
             $result = $form->getData();
             $data = [];
 
-            $columns = $this->clearBlankArrEntries($result);
+            $columns = $this->removeBlankArrEntries($result);
             
             echo "<pre>";print_r($columns); echo "</pre>";
             
@@ -140,7 +140,7 @@ class CsvImportController extends Controller
      * @Route("/csv/edit/dropdowns", name="csv_edit_dropdowns")
      */
     public function editDropdownAction(Request $request) {
-
+        //...
     }
   
     /**
@@ -158,7 +158,7 @@ class CsvImportController extends Controller
     /** 
      * find blank array entries and remove them
      */
-    public function clearBlankArrEntries($array) 
+    public function removeBlankArrEntries($array) 
     {
         foreach($array as $k => $v) 
         {
