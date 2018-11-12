@@ -20,6 +20,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 use AppBundle\Entity\Product;
 use AppBundle\Entity\Attribute;
+use AppBundle\Entity\AttributeOption;
 
 
 class CsvImportController extends Controller
@@ -124,21 +125,7 @@ class CsvImportController extends Controller
 
             return $this->redirectToRoute('csv_edit_dropdowns');
         }
-
-        // save settings, send to process function
-        /*
-        if(count($data) > 0)
-        {
-            echo "Products found";
-            // store into object
-            foreach($data as $product) {
-
-            }
-
-            // make new purchase order & store new items 
-
-        }
-        */
+        
         return $this->render('AppBundle:CsvImport:edit.html.twig', array(
             'form' => $form->createView(),
         )); 
@@ -150,12 +137,40 @@ class CsvImportController extends Controller
     public function editDropdownAction(Request $request) 
     {
         $session = new Session();
+        $em = $this->getDoctrine()->getManager();
+
         echo "<pre>"; print_r($session->get('products')[0]); echo "</pre>";
         echo "<pre>"; print_r($session->get('keys')); echo "</pre>";
         echo "<pre>"; print_r($session->get('cols')); echo "</pre>";
 
         $form = $this->createFormBuilder();
 
+        $attributes = $this->getDoctrine()
+            ->getRepository(AttributeOption::class);
+        // collect product specific attributes 
+        foreach($session->get('cols') as $a) 
+        {
+            if(!is_numeric($a['value'])) 
+            {
+                // place available attributes in array
+                $optionAll = $attributes->findByAttribute($a['value']);
+                $option = [];
+
+                // give every unique value a dropdown with above options
+                foreach($optionAll as $o) {
+                    $option[$o->getName()] = $o->getId();
+                }
+
+                $form->add($a['value'], ChoiceType::class, array(
+                    'choices' => $option, 
+                ));
+
+            } 
+            else 
+            {
+                // ...
+            }
+        }
 
         $form = $form->getForm();
 
