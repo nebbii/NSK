@@ -14,6 +14,7 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -145,31 +146,58 @@ class CsvImportController extends Controller
 
         $form = $this->createFormBuilder();
 
-        $attributes = $this->getDoctrine()
-            ->getRepository(AttributeOption::class);
+        $attributeRepository = $this->getDoctrine()
+            ->getRepository(Attribute::class);
+
         // collect product specific attributes 
         foreach($session->get('cols') as $a) 
         {
-            if(!is_numeric($a['value'])) 
-            {
-                // place available attributes in array
-                $optionAll = $attributes->findByAttribute($a['value']);
-                $option = [];
+            $is_attr = is_numeric($aid); 
 
-                // give every unique value a dropdown with above options
-                foreach($optionAll as $o) {
-                    $option[$o->getName()] = $o->getId();
-                }
-
-                $form->add($a['value'], ChoiceType::class, array(
-                    'choices' => $option, 
-                ));
-
-            } 
-            else 
-            {
-                // ...
+            // check for dropdown or attribute
+            if($is_attr) {
+                $attr = $attributeOption->findById($a['value']);
+                $type = $attr->getType();
             }
+
+            switch($type) {
+                case 1: // Selectbox
+                    $choices = $this->prepareDropdown($a['value']);
+                    $form->add($a['value'], ChoiceType::class, array(
+                        'choices' => $option, 
+                    ));
+                    break;
+                case 0: // Text
+                default:
+                    $form->add($a['value'], TextType::class, array(
+                    ));   
+            }
+            
+            $dropdown = $this->prepareDropdown($a['value']);
+
+            // place available attributes in array
+            /*
+            $optionAll = $attributeOption->findByAttribute($a['value']);
+            $option = [];
+
+            // give every unique value a dropdown with above options
+            foreach($optionAll as $o) 
+            {
+                $option[$o->getName()] = $o->getId();
+            }
+
+            switch($a->getType()) {
+                case 1: // Selectbox
+                    $form->add($a['value'], ChoiceType::class, array(
+                        'choices' => $option, 
+                    ));
+                    break;
+                case 0: // Text
+                default:
+                    $form->add($a['value'], TextType::class, array(
+                    ));   
+            }
+            */
         }
 
         $form = $form->getForm();
@@ -192,7 +220,7 @@ class CsvImportController extends Controller
     }
 
     /** 
-     * find blank array entries and remove them
+     * Find blank array entries and remove them
      */
     public function removeBlankArrEntries($array) 
     {
@@ -204,6 +232,41 @@ class CsvImportController extends Controller
                 $array[$k] = ['key' => $k, 'value' => $v];
             }
         }
+        
+        return $array;
+    }
+
+    /** 
+     * Get options for dropdown dependent on basic or advanced attribute
+     * 
+     * Takes attribute id (numerical or string), returns proper options
+     */ 
+    public function prepareDropdown($aid) 
+    {
+        $repo = $this->getDoctrine()->getRepository(AttributeOption::class);
+        $options = $repo->findByAttribute($aid);
+        $array = [];
+
+        $is_attr = is_numeric($aid);
+
+        switch($is_attr) 
+        {
+            // if basic (false), load assigned table
+            case false:
+                
+                break;
+
+            // if specific, load attributes from table
+            case true:
+                
+                break;
+            default:
+        }
+
+        $result = array(
+            'choices' => $array,
+            'type'    =>
+        );
         
         return $array;
     }
