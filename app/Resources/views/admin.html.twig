@@ -45,12 +45,13 @@
             {% trans %}Tasks{% endtrans %}
         </a>
     </li>
+    <li role="presentation" {{ 'csv_index' in app.request.get('_route') ? " class='active'" : "" }}>
+        <a href="{{ path('csv_index') }} ">
+            <span class="glyphicon glyphicon-open-file" aria-hidden="true" style="margin-right: 10px"></span>
+            {% trans %}CSV Import{% endtrans %}
+        </a>
+    </li>
 </ul>
- 
- 
-
-
-
     
 {% endblock %}
     
