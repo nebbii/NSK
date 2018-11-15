@@ -61,7 +61,7 @@ Now you have your clean clone of Nexxus.
 If you need a production web server like Apache, the public web folder is at a designated location, in which you (fortunally) did not install Nexxus. To make Nexxus publically accessible, move the web folder of the installation to the public web folder of your server. The public web folder is typically named _public_html_ or _wwwroot_. This is an example how it can be achieved:
 ```
 mkdir ../public_html/nsk
-mv web/ ../public_html/nsk
+rsync -r web/. ../public_html/nsk
 ```
 Don't copy this line literally, but apply it to the situation of your web server. In this example, Nexxus will be available on URL http://www.yourdomain.com/nsk
 
